@@ -8,6 +8,8 @@ import sys
 
 from parse_clinvar_xml import HEADER
 
+HEADER.extend(['gold_stars', 'conflicted'])
+
 
 def gzopen(path, mode='r', verbose=True):
     if path.endswith(".gz"):
