@@ -39,7 +39,10 @@ def table_to_vcf(input_table_path, input_reference_genome):
     descriptions = {
         'gold_stars': "Number of gold stars as shown on clinvar web pages to summarize review status. Lookup table described at http://www.ncbi.nlm.nih.gov/clinvar/docs/details/ was used to map the REVIEW_STATUS value to this number.",
     }
+
     for key in HEADER:
+        if key in {'chrom', 'pos', 'ref', 'alt'}:
+            continue
         print("""##INFO=<ID={},Number=1,Type=String,Description="{}">"""
               .format(key.upper(), descriptions.get(key, key.upper())))
     with open(input_reference_genome_fai) as in_fai:
