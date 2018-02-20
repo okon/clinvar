@@ -184,18 +184,24 @@ def parse_clinvar_tree(handle, dest=sys.stdout, multi=None, verbose=True, genome
 
             for attribute_node in traitset.findall('.//AttributeSet/Attribute'):
                 attribute_type = attribute_node.attrib.get('Type')
-                if attribute_type in {'ModeOfInheritance', 'age of onset', 'prevalence', 'disease mechanism'}:
-                    column_name = 'inheritance_modes' if attribute_type == 'ModeOfInheritance' else attribute_type.replace(
-                        ' ', '_')
+                if attribute_type == 'disease mechanism':
                     column_value = attribute_node.text.strip()
                     if column_value:
-                        current_row[column_name].add(column_value)
+                        current_row['disease_mechanism'].add(column_value)
 
-                        # put all the cross references one column, it may contains NCBI gene ID, conditions ID in disease databases.
+            # put all the cross references one column, it may contains NCBI gene ID, conditions ID in disease databases.
             for xref_node in traitset.findall('.//XRef'):
                 xref_db = xref_node.attrib.get('DB')
                 xref_id = xref_node.attrib.get('ID')
                 current_row['xrefs'].add("%s:%s" % (xref_db, xref_id))
+
+        attribute_types = {'ModeOfInheritance': 'inheritance_modes', 'AgeOfOnset': 'age_of_onset'}
+        for attribute in elem.findall('.//ClinVarAssertion/AttributeSet/Attribute'):
+            attribute_type = attribute.attrib.get('Type')
+            if attribute_type in attribute_types:
+                column_value = attribute.text.strip()
+                if column_value:
+                    current_row[attribute_types[attribute_type]].add(column_value)
 
         current_row['origin'] = set()
         for origin in elem.findall('.//ReferenceClinVarAssertion/ObservedIn/Sample/Origin'):
