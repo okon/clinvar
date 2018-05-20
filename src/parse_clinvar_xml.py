@@ -16,7 +16,7 @@ extract_pubmed_id_regex = '[^0-9]+([0-9]+)[^0-9](.*)'  # group(1) will be the fi
 
 HEADER = ['chrom', 'pos', 'ref', 'alt', 'start', 'stop', 'strand', 'variation_type', 'variation_id', 'rcv', 'scv',
           'allele_id', 'symbol',
-          'hgvs_c', 'hgvs_p', 'molecular_consequence',
+          'hgvs_c', 'hgvs_n', 'hgvs_p', 'molecular_consequence',
           'clinical_significance', 'clinical_significance_ordered', 'pathogenic', 'likely_pathogenic',
           'uncertain_significance',
           'likely_benign', 'benign', 'review_status', 'review_status_ordered',
@@ -265,8 +265,9 @@ def parse_clinvar_tree(handle, dest=sys.stdout, multi=None, verbose=True, genome
                             break
 
             current_row['molecular_consequence'] = set()
-            current_row['hgvs_c'] = ''
-            current_row['hgvs_p'] = ''
+            current_row['hgvs_c'] = set()
+            current_row['hgvs_n'] = set()
+            current_row['hgvs_p'] = set()
 
             attributeset = measure[i].findall('./AttributeSet')
             for attribute_node in attributeset:
@@ -275,11 +276,15 @@ def parse_clinvar_tree(handle, dest=sys.stdout, multi=None, verbose=True, genome
 
                 # find hgvs_c
                 if (attribute_type == 'HGVS, coding, RefSeq' and "c." in attribute_value):
-                    current_row['hgvs_c'] = attribute_value
+                    current_row['hgvs_c'].add(attribute_value)
+
+                # find hgvs_n
+                if (attribute_type == 'HGVS, non-coding' and "n." in attribute_value):
+                    current_row['hgvs_n'].add(attribute_value)
 
                 # find hgvs_p
                 if (attribute_type == 'HGVS, protein, RefSeq' and "p." in attribute_value):
-                    current_row['hgvs_p'] = attribute_value
+                    current_row['hgvs_p'].add(attribute_value)
 
                 # aggregate all molecular consequences
                 if (attribute_type == 'MolecularConsequence'):
@@ -288,10 +293,10 @@ def parse_clinvar_tree(handle, dest=sys.stdout, multi=None, verbose=True, genome
                             # print xref.attrib.get('ID'), attribute_value
                             current_row['molecular_consequence'].add(":".join([xref.attrib.get('ID'), attribute_value]))
 
-            column_name = 'molecular_consequence'
-            column_value = current_row[column_name] if type(current_row[column_name]) == list else sorted(
-                current_row[column_name])  # sort columns of type 'set' to get deterministic order
-            current_row[column_name] = remove_newlines_and_tabs(';'.join(map(replace_semicolons, column_value)))
+            for column_name in ('hgvs_c', 'hgvs_n', 'hgvs_p', 'molecular_consequence'):
+                column_value = current_row[column_name] if type(current_row[column_name]) == list else sorted(
+                    current_row[column_name])  # sort columns of type 'set' to get deterministic order
+                current_row[column_name] = remove_newlines_and_tabs(';'.join(map(replace_semicolons, column_value)))
 
             if len(measure) == 1:
                 dest.write(('\t'.join([current_row[column] for column in HEADER]) + '\n').encode('utf-8'))

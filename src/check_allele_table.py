@@ -41,6 +41,7 @@ for i, line in enumerate(f):
         assert len(map(lambda rcv: int(rcv.strip('RCV')), record['rcv'].split(';'))) > 0, 'Unexpected "rcv" column value: ' + record['rcv']
         assert int(record['allele_id']) > 0, 'Unexpected "rcv" column value: ' + record['allele_id']
         assert len(record['hgvs_c']) == 0 or "c." in record['hgvs_c'], 'Unexpected "hgvs_c" column value: ' + record['hgvs_c']
+        assert len(record['hgvs_n']) == 0 or "n." in record['hgvs_n'], 'Unexpected "hgvs_n" column value: ' + record['hgvs_n']
         assert len(record['hgvs_p']) == 0 or "p." in record['hgvs_p'], 'Unexpected "hgvs_p" column value: ' + record['hgvs_p']
         #assert record['molecular_consequence'], 'Unexpected "molecular_consequence" column value: ' + record['molecular_consequence']
 
